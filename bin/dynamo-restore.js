@@ -41,18 +41,25 @@ dynamo.describeTable(
         var start = Date.now();
         var msecPerItem = Math.round(1000 / quota / ((argv.rate || 100) / 100));
         var done = 0;
-        readline.createInterface(process.stdin, process.stdout).on(
+        const lines = [];
+        readline.createInterface({input: process.stdin}).on(
             'line',
             function(line) {
+                lines.push(line);
+            }
+        ).on('close', function() {
+            for (const line of lines) {
                 dynamo.putItem(
                     {
                         TableName: argv.table,
-                        Item: JSON.parse(line)
+                        Item: JSON.parse(line),
+                        ConditionExpression: 'attribute_not_exists(moduleId)'
                     },
                     function (err, data) {
                         if (err) {
                             console.log(err, err.stack);
-                            throw err;
+                            // throw err;
+                        } else {
                         }
                     }
                 );
@@ -62,6 +69,6 @@ dynamo.describeTable(
                     sleep.usleep((expected - Date.now()) * 1000);
                 }
             }
-        );
+        });
     }
 );
